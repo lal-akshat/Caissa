@@ -12,3 +12,4 @@ C:\Users\aksha\RiderProjects\Caissa\Caissa\obj\Debug\net10.0-windows\refint\Cais
 C:\Users\aksha\RiderProjects\Caissa\Caissa\obj\Debug\net10.0-windows\Caissa.pdb
 C:\Users\aksha\RiderProjects\Caissa\Caissa\obj\Debug\net10.0-windows\Caissa.genruntimeconfig.cache
 C:\Users\aksha\RiderProjects\Caissa\Caissa\obj\Debug\net10.0-windows\ref\Caissa.dll
+C:\Users\aksha\RiderProjects\Caissa\Caissa\obj\Debug\net10.0-windows\Caissa.sourcelink.json

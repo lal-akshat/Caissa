@@ -1,34 +1,22 @@
 ﻿using System.Drawing.Drawing2D;
-using System.ComponentModel;
 using Caissa.Chess_Engine;
 
 namespace Caissa;
 
 public partial class ChessBoard : Form
 {
-    // ── Design Tokens (mirrored from MainMenu) ────────────────────────────
-    static readonly Color BgColor = Color.FromArgb(11, 12, 17);
-    static readonly Color SurfaceColor = Color.FromArgb(19, 21, 27);
-    static readonly Color PanelBg = Color.FromArgb(19, 21, 27);
-    static readonly Color DividerColor = Color.FromArgb(42, 44, 52);
-
-    static readonly Color TextPrimary = Color.FromArgb(232, 229, 222);
-    static readonly Color TextSecond = Color.FromArgb(140, 138, 132);
-    static readonly Color TextDisabled = Color.FromArgb(72, 72, 76);
-
-    // Board palette
+    // ── Board-specific palette (kept constant regardless of theme — a
+    // wooden board reads as "chess", not as light/dark UI chrome) ──────────
     static readonly Color LightSquare = Color.FromArgb(236, 218, 185); // classic cream
-    static readonly Color DarkSquare = Color.FromArgb(86, 72, 50); // walnut
+    static readonly Color DarkSquare  = Color.FromArgb(86,  72,  50);  // walnut
 
-    // Interaction overlays — low opacity, no neon
-    static readonly Color SelectedTint = Color.FromArgb(210, 190, 90); // muted gold
+    static readonly Color SelectedTint = Color.FromArgb(210, 190, 90);  // muted gold
     static readonly Color LastMoveTint = Color.FromArgb(175, 165, 80);
-    static readonly Color LegalDotClr = Color.FromArgb(30, 30, 30);
-    static readonly Color LegalCapClr = Color.FromArgb(160, 50, 40);
-    static readonly Color CheckSquare = Color.FromArgb(190, 48, 36); // clear red, no glow
+    static readonly Color LegalDotClr  = Color.FromArgb(30,  30,  30);
+    static readonly Color LegalCapClr  = Color.FromArgb(160, 50,  40);
+    static readonly Color CheckSquare  = Color.FromArgb(190, 48,  36);  // clear red, no glow
 
-    // Copper accent
-    static readonly Color Accent = Color.FromArgb(176, 112, 68);
+    static readonly Color WarningColor = Color.FromArgb(190, 48, 36);
 
     // ── Board Layout ──────────────────────────────────────────────────────
     const int SquareSize = 72;
@@ -62,27 +50,45 @@ public partial class ChessBoard : Form
     int initialMs = 5 * 60 * 1000; // default 5 min
 
     // ── AI ────────────────────────────────────────────────────────────────
+    // Chosen up-front on the main menu now (Standard · vs Computer), so
+    // there's no in-game toggle — just whether this game has one.
     bool aiEnabled = false;
     bool aiIsWhite = false;
     System.Windows.Forms.Timer aiTimer;
 
     EngineAdapter engineAdapter = new EngineAdapter();
-    
+
     // ── Controls ─────────────────────────────────────────────────────────
     BoardPanel boardPanel = null!;
     ListBox historyList = null!;
     Label statusLabel = null!;
     Label whiteClock = null!;
     Label blackClock = null!;
-    Label whiteLabel = null!;
-    Label blackLabel = null!;
-    Button aiToggleBtn = null!;
 
-    public ChessBoard(GameMode mode)
+    Panel _sidebar = null!;
+    Label _headerLabel = null!;
+    Panel _headerDivider = null!;
+    ThemeToggle _themeToggle = null!;
+    ToolTip _toggleTip = null!;
+
+    Panel _blackClockPanel = null!;
+    Panel _whiteClockPanel = null!;
+    Label _blackNameLabel = null!;
+    Label _whiteNameLabel = null!;
+
+    Panel _hr1 = null!, _hr2 = null!, _hr3 = null!;
+    Label _modeLabel = null!;
+    Label _histTitle = null!;
+    Button _menuBtn = null!;
+
+    public ChessBoard(GameMode mode, bool vsComputer = false)
     {
         currentMode = mode;
-        Text = $"Chess — {mode}";
-        BackColor = BgColor;
+        aiEnabled = vsComputer;
+        aiIsWhite = false;
+
+        Text = $"Chess — {mode}" + (vsComputer ? " · vs Computer" : "");
+        BackColor = Theme.BgColor;
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
@@ -111,6 +117,13 @@ public partial class ChessBoard : Form
         {
             if (e.KeyCode == Keys.Escape) Close();
         };
+
+        // Repaint whenever the theme changes — whether that happened from
+        // this window's own toggle or from the one on the main menu.
+        // Unsubscribe on close since a new ChessBoard is created per game
+        // and we don't want closed instances lingering on a static event.
+        Theme.ThemeChanged += ApplyTheme;
+        FormClosed += (_, __) => Theme.ThemeChanged -= ApplyTheme;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -124,124 +137,160 @@ public partial class ChessBoard : Form
             Top = 0,
             Width = boardPx,
             Height = boardPx,
-            BackColor = BgColor,
+            BackColor = Theme.BgColor,
         };
         boardPanel.MouseClick += OnBoardClick;
         Controls.Add(boardPanel);
 
         // ── Sidebar shell ────────────────────────────────────────────────
-        var sidebar = new Panel
+        _sidebar = new Panel
         {
             Left = boardPx,
             Top = 0,
             Width = SidebarW,
             Height = boardPx,
-            BackColor = PanelBg,
+            BackColor = Theme.BgColor,
         };
-        // Left border — 1 px structural divider
-        sidebar.Paint += (s, e) =>
+        _sidebar.Paint += (s, e) =>
         {
-            using var pen = new Pen(DividerColor, 1);
+            using var pen = new Pen(Theme.BorderColor, 1);
             e.Graphics.DrawLine(pen, 0, 0, 0, boardPx);
         };
-        Controls.Add(sidebar);
+        Controls.Add(_sidebar);
 
         int cx = SidebarW; // content width
         int px = 20; // horizontal padding
 
-        // ── Clocks ───────────────────────────────────────────────────────
-        // Black clock (opponent, shown at top — they're "above")
-        var blackClockPanel = BuildClockPanel(false, px, 16, cx - px * 2);
-        sidebar.Controls.Add(blackClockPanel);
+        // ── Header (mirrors MainMenu: title + theme toggle) ────────────────
+        _headerLabel = new Label
+        {
+            Text = "Caissa",
+            Font = new Font("Segoe UI Semibold", 13F, FontStyle.Bold),
+            ForeColor = Theme.TextPrimary,
+            Left = px,
+            Top = 18,
+            Width = 160,
+            Height = 24,
+            BackColor = Color.Transparent,
+        };
+        _sidebar.Controls.Add(_headerLabel);
 
-        // White clock (local player, shown at bottom of clock area)
-        var whiteClockPanel = BuildClockPanel(true, px, 100, cx - px * 2);
-        sidebar.Controls.Add(whiteClockPanel);
+        const int toggleSize = 32;
+
+        _themeToggle = new ThemeToggle
+        {
+            Left = cx - toggleSize - px + 4,
+            Top = 12,
+            Width = toggleSize,
+            Height = toggleSize,
+        };
+
+        _sidebar.Controls.Add(_themeToggle);
+        _themeToggle.BringToFront();
+
+        _toggleTip = new ToolTip();
+        _toggleTip.SetToolTip(_themeToggle, Theme.IsDarkMode ? "Switch to light mode" : "Switch to dark mode");
+
+        _headerDivider = HRule(0, 54, cx);
+        _sidebar.Controls.Add(_headerDivider);
+
+        // ── Clocks ───────────────────────────────────────────────────────
+        _blackClockPanel = BuildClockPanel(false, px, 70, cx - px * 2, out _blackNameLabel);
+        _sidebar.Controls.Add(_blackClockPanel);
+
+        _whiteClockPanel = BuildClockPanel(true, px, 156, cx - px * 2, out _whiteNameLabel);
+        _sidebar.Controls.Add(_whiteClockPanel);
 
         // ── Divider ──────────────────────────────────────────────────────
-        var hr1 = HRule(px, 188, cx - px * 2);
-        sidebar.Controls.Add(hr1);
+        _hr1 = HRule(px, 240, cx - px * 2);
+        _sidebar.Controls.Add(_hr1);
 
         // ── Status / turn label ──────────────────────────────────────────
         statusLabel = new Label
         {
             Text = "White to move",
             Font = new Font("Segoe UI", 11F, FontStyle.Bold),
-            ForeColor = TextPrimary,
+            ForeColor = Theme.TextPrimary,
             Left = px,
-            Top = 200,
+            Top = 252,
             Width = cx - px * 2,
             Height = 24,
             BackColor = Color.Transparent,
         };
-        sidebar.Controls.Add(statusLabel);
+        _sidebar.Controls.Add(statusLabel);
 
         // Mode label — small, factual
-        var modeLabel = new Label
+        _modeLabel = new Label
         {
-            Text = currentMode switch
-            {
-                GameMode.Chess960 => "Chess 960 — Fischer Random",
-                GameMode.AtomicChess => "Atomic Chess — exploding captures",
-                _ => "Standard Chess",
-            },
+            Text = ModeLabelText(),
             Font = new Font("Segoe UI", 8.5F),
-            ForeColor = TextDisabled,
+            ForeColor = Theme.TextTertiary,
             Left = px,
-            Top = 228,
+            Top = 280,
             Width = cx - px * 2,
             Height = 18,
             BackColor = Color.Transparent,
         };
-        sidebar.Controls.Add(modeLabel);
+        _sidebar.Controls.Add(_modeLabel);
 
         // ── Divider ──────────────────────────────────────────────────────
-        sidebar.Controls.Add(HRule(px, 258, cx - px * 2));
+        _hr2 = HRule(px, 310, cx - px * 2);
+        _sidebar.Controls.Add(_hr2);
 
         // ── Move history ─────────────────────────────────────────────────
-        var histTitle = new Label
+        _histTitle = new Label
         {
             Text = "MOVES",
             Font = new Font("Segoe UI", 7.5F, FontStyle.Bold),
-            ForeColor = TextDisabled,
+            ForeColor = Theme.TextTertiary,
             Left = px,
-            Top = 270,
+            Top = 322,
             Width = cx - px * 2,
             Height = 16,
             BackColor = Color.Transparent,
         };
-        sidebar.Controls.Add(histTitle);
+        _sidebar.Controls.Add(_histTitle);
 
         historyList = new ListBox
         {
             Left = px,
-            Top = 292,
+            Top = 344,
             Width = cx - px * 2,
-            Height = boardPx - 430,
-            BackColor = Color.FromArgb(14, 15, 20),
-            ForeColor = TextSecond,
+            Height = boardPx - 344 - 96,
+            BackColor = Theme.CardBg,
+            ForeColor = Theme.TextSecondary,
             BorderStyle = BorderStyle.None,
             Font = new Font("Consolas", 9.5F),
             IntegralHeight = false,
         };
-        sidebar.Controls.Add(historyList);
+        _sidebar.Controls.Add(historyList);
 
         // ── Divider ──────────────────────────────────────────────────────
-        sidebar.Controls.Add(HRule(px, boardPx - 128, cx - px * 2));
-
-        // ── AI toggle ────────────────────────────────────────────────────
-        aiToggleBtn = MakeButton("Computer: Off", px, boardPx - 116, cx - px * 2, 36);
-        aiToggleBtn.Click += OnAiToggle;
-        sidebar.Controls.Add(aiToggleBtn);
+        _hr3 = HRule(px, boardPx - 88, cx - px * 2);
+        _sidebar.Controls.Add(_hr3);
 
         // ── Main menu button ─────────────────────────────────────────────
-        var menuBtn = MakeButton("Main Menu", px, boardPx - 68, cx - px * 2, 52);
-        menuBtn.Click += (s, e) => Close();
-        sidebar.Controls.Add(menuBtn);
+        _menuBtn = MakeButton("Main Menu", px, boardPx - 72, cx - px * 2, 56);
+        _menuBtn.Click += (s, e) => Close();
+        _sidebar.Controls.Add(_menuBtn);
+
+        UpdateClockDisplay();
+    }
+
+    private string ModeLabelText()
+    {
+        string baseText = currentMode switch
+        {
+            GameMode.Chess960 => "Chess960 — Fischer Random",
+            GameMode.AtomicChess => "Atomic Chess — exploding captures",
+            _ => "Standard Chess",
+        };
+
+        return baseText + (aiEnabled ? "  ·  vs Computer" : "  ·  vs Player");
     }
 
     // ── Clock panel builder ──────────────────────────────────────────────
-    private Panel BuildClockPanel(bool isWhite, int left, int top, int width)
+    private Panel BuildClockPanel(bool isWhite, int left, int top, int width, out Label nameLabel)
     {
         var panel = new Panel
         {
@@ -249,32 +298,44 @@ public partial class ChessBoard : Form
             Top = top,
             Width = width,
             Height = 68,
-            BackColor = Color.FromArgb(24, 26, 32),
-        };
-        panel.Paint += (s, e) =>
-        {
-            using var pen = new Pen(DividerColor, 1);
-            e.Graphics.DrawRectangle(pen, 0, 0, panel.Width - 1, panel.Height - 1);
+            BackColor = Color.Transparent,
         };
 
-        var nameLabel = new Label
+        panel.Paint += (s, e) =>
+        {
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            var rect = new RectangleF(0, 0, panel.Width - 1, panel.Height - 1);
+
+            using var path = Theme.RoundedRect(rect, 8f);
+
+            using (var bg = new SolidBrush(Theme.CardBg))
+                g.FillPath(bg, path);
+
+            using var pen = new Pen(Theme.BorderColor, 1f);
+            g.DrawPath(pen, path);
+        };
+
+        var nl = new Label
         {
             Text = isWhite ? "White" : "Black",
             Font = new Font("Segoe UI", 8F),
-            ForeColor = TextDisabled,
+            ForeColor = Theme.TextTertiary,
             Left = 12,
             Top = 8,
             Width = 120,
             Height = 16,
             BackColor = Color.Transparent,
         };
-        panel.Controls.Add(nameLabel);
+        panel.Controls.Add(nl);
+        nameLabel = nl;
 
         var clockLabel = new Label
         {
             Text = FormatMs(initialMs),
             Font = new Font("Consolas", 20F, FontStyle.Bold),
-            ForeColor = TextPrimary,
+            ForeColor = Theme.TextPrimary,
             Left = 10,
             Top = 26,
             Width = width - 20,
@@ -299,15 +360,15 @@ public partial class ChessBoard : Form
             Width = width,
             Height = height,
             FlatStyle = FlatStyle.Flat,
-            BackColor = Color.FromArgb(26, 28, 35),
-            ForeColor = Color.FromArgb(200, 197, 190),
-            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+            BackColor = Theme.CardBg,
+            ForeColor = Theme.TextPrimary,
+            Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
             Cursor = Cursors.Hand,
             TextAlign = ContentAlignment.MiddleCenter,
         };
-        btn.FlatAppearance.BorderColor = Color.FromArgb(50, 52, 62);
+        btn.FlatAppearance.BorderColor = Theme.BorderColor;
         btn.FlatAppearance.BorderSize = 1;
-        btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(34, 36, 45);
+        btn.FlatAppearance.MouseOverBackColor = Theme.HoverTint;
         return btn;
     }
 
@@ -319,8 +380,56 @@ public partial class ChessBoard : Form
             Top = top,
             Width = width,
             Height = 1,
-            BackColor = DividerColor,
+            BackColor = Theme.BorderColor,
         };
+    }
+
+    // ── Theme Application ────────────────────────────────────────────────
+    private void ApplyTheme()
+    {
+        BackColor = Theme.BgColor;
+        boardPanel.BackColor = Theme.BgColor;
+
+        _sidebar.BackColor = Theme.BgColor;
+        _sidebar.Invalidate();
+
+        _headerLabel.ForeColor = Theme.TextPrimary;
+        _headerDivider.BackColor = Theme.BorderColor;
+
+        _hr1.BackColor = Theme.BorderColor;
+        _hr2.BackColor = Theme.BorderColor;
+        _hr3.BackColor = Theme.BorderColor;
+
+        _blackClockPanel.Invalidate();
+        _whiteClockPanel.Invalidate();
+        _blackNameLabel.ForeColor = Theme.TextTertiary;
+        _whiteNameLabel.ForeColor = Theme.TextTertiary;
+
+        _modeLabel.ForeColor = Theme.TextTertiary;
+        _modeLabel.Text = ModeLabelText();
+
+        _histTitle.ForeColor = Theme.TextTertiary;
+
+        historyList.BackColor = Theme.CardBg;
+        historyList.ForeColor = Theme.TextSecondary;
+
+        _menuBtn.BackColor = Theme.CardBg;
+        _menuBtn.ForeColor = Theme.TextPrimary;
+        _menuBtn.FlatAppearance.BorderColor = Theme.BorderColor;
+        _menuBtn.FlatAppearance.MouseOverBackColor = Theme.HoverTint;
+
+        _themeToggle.BackColor = Theme.BgColor;
+        _themeToggle.Invalidate();
+        _toggleTip.SetToolTip(_themeToggle, Theme.IsDarkMode ? "Switch to light mode" : "Switch to dark mode");
+
+        UpdateClockDisplay();
+
+        if (!gameOver) UpdateStatus();
+
+        boardPanel.Invalidate();
+        Invalidate(true);
+        _themeToggle.BringToFront();
+        Update();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -418,7 +527,7 @@ public partial class ChessBoard : Form
             gameOver = true;
             string loser = whiteMs == 0 ? "White" : "Black";
             statusLabel.Text = $"{loser} — out of time";
-            statusLabel.ForeColor = Color.FromArgb(190, 48, 36);
+            statusLabel.ForeColor = WarningColor;
         }
     }
 
@@ -428,8 +537,8 @@ public partial class ChessBoard : Form
         if (blackClock != null) blackClock.Text = FormatMs(blackMs);
 
         // Dim the inactive clock, brighten the active one
-        var activeColor = TextPrimary;
-        var inactiveColor = Color.FromArgb(80, 78, 72);
+        var activeColor = Theme.TextPrimary;
+        var inactiveColor = Theme.TextTertiary;
         if (whiteClock != null) whiteClock.ForeColor = whiteTurn ? activeColor : inactiveColor;
         if (blackClock != null) blackClock.ForeColor = whiteTurn ? inactiveColor : activeColor;
     }
@@ -443,19 +552,8 @@ public partial class ChessBoard : Form
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // AI (random legal move)
+    // AI (engine move)
     // ═══════════════════════════════════════════════════════════════════════
-    private void OnAiToggle(object? sender, EventArgs e)
-    {
-        aiEnabled = !aiEnabled;
-        aiToggleBtn.Text = aiEnabled ? "Computer: On (Black)" : "Computer: Off";
-        aiToggleBtn.ForeColor = aiEnabled ? Accent : Color.FromArgb(200, 197, 190);
-
-        // If it's already the AI's turn, queue a move
-        if (aiEnabled && !whiteTurn && !gameOver && !animTimer.Enabled)
-            aiTimer.Start();
-    }
-
     private void OnAiTick(object? sender, EventArgs e)
     {
         aiTimer.Stop();
@@ -493,9 +591,9 @@ public partial class ChessBoard : Form
             bestMove.ToRow,
             bestMove.ToColumn);
     }
-    
-    
-    
+
+
+
     private Chess_Engine.Board ConvertToEngineBoard()
     {
         var engineBoard = new Chess_Engine.Board();
@@ -514,7 +612,7 @@ public partial class ChessBoard : Form
                         new PieceData(
                             PieceType.None,
                             PieceColor.White));
-                
+
                     continue;
                 }
 
@@ -614,7 +712,7 @@ public partial class ChessBoard : Form
             else
                 statusLabel.Text = "Draw";
 
-            statusLabel.ForeColor = Color.FromArgb(190, 48, 36);
+            statusLabel.ForeColor = WarningColor;
         }
     }
 
@@ -746,15 +844,13 @@ public partial class ChessBoard : Form
             statusLabel.Text = inCheck
                 ? $"{(whiteTurn ? "White" : "Black")} — checkmate"
                 : "Stalemate";
-            statusLabel.ForeColor = inCheck
-                ? Color.FromArgb(190, 48, 36)
-                : TextSecond;
+            statusLabel.ForeColor = inCheck ? WarningColor : Theme.TextSecondary;
             return;
         }
 
         string side = whiteTurn ? "White to move" : "Black to move";
         statusLabel.Text = inCheck ? $"{side} — check" : side;
-        statusLabel.ForeColor = inCheck ? Color.FromArgb(190, 48, 36) : TextPrimary;
+        statusLabel.ForeColor = inCheck ? WarningColor : Theme.TextPrimary;
         boardPanel.Invalidate(); // repaint to show/clear check highlight
     }
 
@@ -1022,7 +1118,7 @@ public partial class ChessBoard : Form
                 g.DrawString(glyph, fnt, br, rect, sf);
             }
         }
-        
+
         static Image? LoadImage(string piece)
         {
             if (piece == ".") return null;

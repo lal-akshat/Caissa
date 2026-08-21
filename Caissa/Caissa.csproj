@@ -9,10 +9,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Compile Update="ChessBoard.cs">
+      <Compile Update="Design Files\ChessBoard.cs">
         <SubType>Form</SubType>
       </Compile>
-      <Compile Update="MainMenu.cs">
+      <Compile Update="Design Files\MainMenu.cs">
         <SubType>Form</SubType>
       </Compile>
     </ItemGroup>
