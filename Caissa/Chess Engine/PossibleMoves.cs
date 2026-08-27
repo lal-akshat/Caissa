@@ -2,9 +2,7 @@
 
 public class PossibleMoves
 {
-    public List<Move> GenerateMoves(
-        Board board,
-        PieceColor color)
+    public List<Move> GenerateMoves(Board board, PieceColor color)
     {
         List<Move> moves = new List<Move>();
 
@@ -27,85 +25,46 @@ public class PossibleMoves
 
                 if (piece.Type == PieceType.Pawn)
                 {
-                    GeneratePawnMoves(
-                        board,
-                        row,
-                        column,
-                        color,
-                        moves);
+                    GeneratePawnMoves(board, row, column, color, moves);
                 }
                 else if (piece.Type == PieceType.Knight)
                 {
-                    GenerateKnightMoves(
-                        board,
-                        row,
-                        column,
-                        color,
-                        moves);
+                    GenerateKnightMoves(board, row, column, color, moves);
                 }
                 else if (piece.Type == PieceType.Bishop)
                 {
-                    GenerateBishopMoves(
-                        board,
-                        row,
-                        column,
-                        color,
-                        moves);
+                    GenerateBishopMoves(board, row, column, color, moves);
                 }
                 else if (piece.Type == PieceType.Rook)
                 {
-                    GenerateRookMoves(
-                        board,
-                        row,
-                        column,
-                        color,
-                        moves);
+                    GenerateRookMoves(board, row, column, color, moves);
                 }
                 else if (piece.Type == PieceType.Queen)
                 {
-                    GenerateQueenMoves(
-                        board,
-                        row,
-                        column,
-                        color,
-                        moves);
+                    GenerateQueenMoves(board, row, column, color, moves);
                 }
                 else if (piece.Type == PieceType.King)
                 {
-                    GenerateKingMoves(
-                        board,
-                        row,
-                        column,
-                        color,
-                        moves);
+                    GenerateKingMoves(board, row, column, color, moves);
                 }
             }
         }
-
-        return FilterLegalMoves(
-            board,
-            color,
-            moves);
+        return FilterLegalMoves(board, color, moves);
     }
 
     // ============================================================
     // LEGAL MOVE FILTERING
     // ============================================================
 
-    private List<Move> FilterLegalMoves(
-        Board board,
-        PieceColor color,
-        List<Move> moves)
+    private List<Move> FilterLegalMoves(Board board, PieceColor color, List<Move> moves)
     {
-        List<Move> legalMoves =
-            new List<Move>();
+        List<Move> legalMoves = new List<Move>();
 
         foreach (Move move in moves)
         {
             board.MakeMove(move);
 
-            bool kingInCheck =
-                board.IsKingInCheck(color);
+            bool kingInCheck = board.IsKingInCheck(color);
 
             board.UndoMove(move);
 
@@ -114,7 +73,6 @@ public class PossibleMoves
                 legalMoves.Add(move);
             }
         }
-
         return legalMoves;
     }
 
@@ -122,12 +80,7 @@ public class PossibleMoves
     // PAWN
     // ============================================================
 
-    private void GeneratePawnMoves(
-        Board board,
-        int xPos,
-        int yPos,
-        PieceColor color,
-        List<Move> moves)
+    private void GeneratePawnMoves(Board board, int xPos, int yPos, PieceColor color, List<Move> moves)
     {
         int direction;
 
@@ -140,30 +93,19 @@ public class PossibleMoves
             direction = 1;
         }
 
-        int xMove =
-            xPos + direction;
+        int xMove = xPos + direction;
 
         // Move forward
         if (xMove >= 0 && xMove <= 7)
         {
-            PieceData target =
-                board.GetPiece(xMove, yPos);
+            PieceData target = board.GetPiece(xMove, yPos);
 
             if (target.Type == PieceType.None)
             {
-                moves.Add(
-                    CreateMove(
-                        board,
-                        xPos,
-                        yPos,
-                        xMove,
-                        yPos));
+                moves.Add(CreateMove(board, xPos, yPos, xMove, yPos));
 
                 // Move forward two squares
-                if ((color == PieceColor.White &&
-                     xPos == 6) ||
-                    (color == PieceColor.Black &&
-                     xPos == 1))
+                if ((color == PieceColor.White && xPos == 6) || (color == PieceColor.Black && xPos == 1))
                 {
                     int twoSquares =
                         xPos + 2 * direction;

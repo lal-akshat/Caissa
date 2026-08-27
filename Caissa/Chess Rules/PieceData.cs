@@ -25,6 +25,7 @@ public static class PieceColorExtensions
 {
     public static PieceColor Opposite(this PieceColor color)
     {
+        // Return the opposite color
         return color == PieceColor.White
             ? PieceColor.Black
             : PieceColor.White;
@@ -33,9 +34,11 @@ public static class PieceColorExtensions
 
 public class PieceData
 {
+    // Stores the piece type and color, read only
     public PieceType Type { get; }
     public PieceColor Color { get; }
 
+    // Creates a piece with a specific type and color
     public PieceData(PieceType type, PieceColor color)
     {
         Type = type;

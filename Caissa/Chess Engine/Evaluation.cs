@@ -2,13 +2,12 @@
 
 public static class Evaluation
 {
-    /**
-     * Method to evaluate a score for the current board
-     */
+    // Evaluates the current board position from White's perspective
     public static int Evaluate(Board board)
     {
         int score = 0;
 
+        // Iterate through every square on the board
         for (int row = 0; row < 8; row++)
         {
             for (int column = 0; column < 8; column++)
@@ -20,15 +19,11 @@ public static class Evaluation
                 {
                     continue;
                 }
-
+                
                 int value = GetPieceValue(piece.Type);
 
-                // Add positional value
-                value += GetPositionValue(
-                    piece.Type,
-                    piece.Color,
-                    row,
-                    column);
+                // Add positional value to the piece's value
+                value += GetPositionValue(piece.Type, piece.Color, row, column);
 
                 if (piece.Color == PieceColor.White)
                 {
@@ -40,38 +35,35 @@ public static class Evaluation
                 }
             }
         }
-
+        // Return the final evaluation of the position
         return score;
     }
 
-    // ============================================================
-    // MATERIAL VALUES
-    // ============================================================
-
+    // Returns the basic point value of each piece
     public static int GetPieceValue(PieceType type)
     {
         return type switch
         {
             PieceType.Pawn => 100,
+            
             PieceType.Knight => 320,
+            
             PieceType.Bishop => 330,
+            
             PieceType.Rook => 500,
+            
             PieceType.Queen => 900,
+            
             PieceType.King => 20000,
+            
             PieceType.None => 0,
+            
             _ => 0
         };
     }
-
-    // ============================================================
-    // POSITION VALUE
-    // ============================================================
-
-    private static int GetPositionValue(
-        PieceType type,
-        PieceColor color,
-        int row,
-        int column)
+    
+    // Returns a positional bonus or penalty depending on the piece's location
+    private static int GetPositionValue(PieceType type, PieceColor color, int row, int column)
     {
         // Piece-square tables are written from White's perspective.
         //
@@ -86,34 +78,28 @@ public static class Evaluation
             ? row
             : 7 - row;
 
+        // Get the positional value from the table for the piece type
         return type switch
         {
-            PieceType.Pawn =>
-                PawnTable[tableRow, column],
+            PieceType.Pawn => PawnTable[tableRow, column],
 
-            PieceType.Knight =>
-                KnightTable[tableRow, column],
+            PieceType.Knight => KnightTable[tableRow, column],
 
-            PieceType.Bishop =>
-                BishopTable[tableRow, column],
+            PieceType.Bishop => BishopTable[tableRow, column],
 
-            PieceType.Rook =>
-                RookTable[tableRow, column],
+            PieceType.Rook => RookTable[tableRow, column],
 
-            PieceType.Queen =>
-                QueenTable[tableRow, column],
+            PieceType.Queen => QueenTable[tableRow, column],
 
-            PieceType.King =>
-                KingTable[tableRow, column],
+            PieceType.King => KingTable[tableRow, column],
+            
+            PieceType.None => 0,
 
             _ => 0
         };
     }
 
-    // ============================================================
-    // PAWN
-    // ============================================================
-
+    // Positional bonuses and penalties for pawns
     private static readonly int[,] PawnTable =
     {
         {  0,   0,   0,   0,   0,   0,   0,   0 },
@@ -126,10 +112,7 @@ public static class Evaluation
         {  0,   0,   0,   0,   0,   0,   0,   0 }
     };
 
-    // ============================================================
-    // KNIGHT
-    // ============================================================
-
+    // Positional bonuses and penalties for knights
     private static readonly int[,] KnightTable =
     {
         { -50, -40, -30, -30, -30, -30, -40, -50 },
@@ -142,10 +125,7 @@ public static class Evaluation
         { -50, -40, -30, -30, -30, -30, -40, -50 }
     };
 
-    // ============================================================
-    // BISHOP
-    // ============================================================
-
+    // Positional bonuses and penalties for bishops
     private static readonly int[,] BishopTable =
     {
         { -20, -10, -10, -10, -10, -10, -10, -20 },
@@ -158,10 +138,7 @@ public static class Evaluation
         { -20, -10, -10, -10, -10, -10, -10, -20 }
     };
 
-    // ============================================================
-    // ROOK
-    // ============================================================
-
+    // Positional bonuses and penalties for rooks
     private static readonly int[,] RookTable =
     {
         {  0,   0,   0,   5,   5,   0,   0,   0 },
@@ -174,10 +151,7 @@ public static class Evaluation
         {  0,   0,   0,   0,   0,   0,   0,   0 }
     };
 
-    // ============================================================
-    // QUEEN
-    // ============================================================
-
+    // Positional bonuses and penalties for queens
     private static readonly int[,] QueenTable =
     {
         { -20, -10, -10,  -5,  -5, -10, -10, -20 },
@@ -190,10 +164,7 @@ public static class Evaluation
         { -20, -10, -10,  -5,  -5, -10, -10, -20 }
     };
 
-    // ============================================================
-    // KING
-    // ============================================================
-
+    // Positional bonuses and penalties for kings
     private static readonly int[,] KingTable =
     {
         { -30, -40, -40, -50, -50, -40, -40, -30 },
