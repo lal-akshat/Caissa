@@ -591,9 +591,7 @@ public partial class ChessBoard : Form
             bestMove.ToRow,
             bestMove.ToColumn);
     }
-
-
-
+    
     private Chess_Engine.Board ConvertToEngineBoard()
     {
         var engineBoard = new Chess_Engine.Board();

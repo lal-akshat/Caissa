@@ -31,7 +31,7 @@ public class Queen : Piece
             return false;
         }
 
-        //Check to move
+        //Check to move if the piece is 
         if (yMove > YPos && xMove == XPos)
         {
             for (var i = yMove - YPos; i > 1; i--)
@@ -104,7 +104,6 @@ public class Queen : Piece
             }
         }
 
-
         else if (yMove > YPos && xMove < XPos && yMove - YPos == XPos - xMove) //Checks down diagonally right
         {
             for (var i = yMove - YPos; i > 1; i--)
@@ -116,7 +115,6 @@ public class Queen : Piece
                 }
             }
         }
-
 
         else if (yMove < YPos && xMove < XPos && YPos - yMove == XPos - xMove) //Checks down diagonally left
         {

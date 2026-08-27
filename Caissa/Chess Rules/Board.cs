@@ -2,7 +2,8 @@
 
 public class Board
 {
-    private readonly PieceData[,] squares = new PieceData[8, 8];
+    // Creates a 2D 8x8 array with elements of type PieceData
+    private readonly PieceData[,] _squares = new PieceData[8, 8];
 
     public Board()
     {
@@ -11,75 +12,65 @@ public class Board
         {
             for (int column = 0; column < 8; column++)
             {
-                squares[row, column] =
-                    new PieceData(PieceType.None, PieceColor.White);
+                _squares[row, column] = new PieceData(PieceType.None, PieceColor.None);
             }
         }
-
         SetupStartingPosition();
     }
 
+    // Method to return the piece on a specific row, column
     public PieceData GetPiece(int row, int column)
     {
-        return squares[row, column];
+        return _squares[row, column];   
     }
 
+    // Method to set a piece on a specific row, column
     public void SetPiece(int row, int column, PieceData piece)
     {
-        squares[row, column] = piece;
+        _squares[row, column] = piece;
     }
-
-    // ============================================================
-    // MAKE MOVE
-    // ============================================================
-
+    
+    // Method to allow a piece to move from its current square to another square
     public void MakeMove(Move move)
     {
-        PieceData piece =
-            squares[move.FromRow, move.FromColumn];
+        // Get the piece at the starting position
+        PieceData piece = _squares[move.FromRow, move.FromColumn];
 
-        squares[move.ToRow, move.ToColumn] = piece;
+        // Place that piece at the ending position
+        _squares[move.ToRow, move.ToColumn] = piece;
 
-        squares[move.FromRow, move.FromColumn] =
-            new PieceData(
-                PieceType.None,
-                PieceColor.White);
+        // Empty the starting position
+        _squares[move.FromRow, move.FromColumn] = new PieceData(PieceType.None, PieceColor.None);
     }
 
-    // ============================================================
-    // UNDO MOVE
-    // ============================================================
-
+    // Method that allows a piece to move back to its original square
     public void UndoMove(Move move)
     {
-        PieceData piece =
-            squares[move.ToRow, move.ToColumn];
+        // Get the piece at the ending position
+        PieceData piece = _squares[move.ToRow, move.ToColumn];
 
-        squares[move.FromRow, move.FromColumn] = piece;
+        // Place that piece at the starting position
+        _squares[move.FromRow, move.FromColumn] = piece;
 
-        squares[move.ToRow, move.ToColumn] =
-            move.CapturedPiece;
+        // Replace the ending position with the captured piece if any
+        _squares[move.ToRow, move.ToColumn] = move.CapturedPiece;
     }
 
-    // ============================================================
-    // CHECK DETECTION
-    // ============================================================
-
+    // Checks whether the specified king is currently in check
     public bool IsKingInCheck(PieceColor color)
     {
         int kingRow = -1;
         int kingColumn = -1;
 
-        // Find the king
+        // Find the king by iterating through the board
         for (int row = 0; row < 8; row++)
         {
             for (int column = 0; column < 8; column++)
             {
-                PieceData piece =
-                    squares[row, column];
+                PieceData isKing = _squares[row, column];
 
-                if (piece.Type == PieceType.King &&
-                    piece.Color == color)
+                // Check whether the current square contains the correct king
+                if (isKing.Type == PieceType.King && isKing.Color == color)
                 {
                     kingRow = row;
                     kingColumn = column;
@@ -87,30 +78,30 @@ public class Board
                 }
             }
 
+            // Stop searching once the king is found
             if (kingRow != -1)
             {
                 break;
             }
         }
 
-        // No king found
+        // Failsafe, should never execute
         if (kingRow == -1)
         {
             return true;
         }
 
-        PieceColor enemyColor =
-            color == PieceColor.White
+        // If color is white, make enemy color black. Vice Versa
+        PieceColor enemyColor = color == PieceColor.White
                 ? PieceColor.Black
                 : PieceColor.White;
 
-        // Check every enemy piece
+        // Check whether any enemy piece attacks the king
         for (int row = 0; row < 8; row++)
         {
             for (int column = 0; column < 8; column++)
             {
-                PieceData piece =
-                    squares[row, column];
+                PieceData piece = _squares[row, column];
 
                 if (piece.Type == PieceType.None)
                 {
@@ -122,236 +113,173 @@ public class Board
                     continue;
                 }
 
-                if (PieceAttacksSquare(
-                        row,
-                        column,
-                        kingRow,
-                        kingColumn))
+                // If a piece is attacking the king, the king is in check
+                if (PieceAttacksSquare(row, column, kingRow, kingColumn))
                 {
                     return true;
                 }
             }
         }
-
         return false;
     }
-
-    // ============================================================
-    // PIECE ATTACK DETECTION
-    // ============================================================
-
-    private bool PieceAttacksSquare(
-        int fromRow,
-        int fromColumn,
-        int toRow,
-        int toColumn)
+    
+    // Checks whether a piece can attack a specific square
+    private bool PieceAttacksSquare(int fromRow, int fromColumn, int toRow, int toColumn)
     {
-        PieceData piece =
-            squares[fromRow, fromColumn];
+        PieceData piece = _squares[fromRow, fromColumn];
 
-        int rowDifference =
-            toRow - fromRow;
+        // Figure out the distance between the piece and the specific square
+        int rowDifference = toRow - fromRow;
 
-        int columnDifference =
-            toColumn - fromColumn;
+        int columnDifference = toColumn - fromColumn;
 
-        int absRow =
-            Math.Abs(rowDifference);
+        int absRow = Math.Abs(rowDifference);
 
-        int absColumn =
-            Math.Abs(columnDifference);
+        int absColumn = Math.Abs(columnDifference);
 
         switch (piece.Type)
         {
             case PieceType.Pawn:
             {
-                int direction =
-                    piece.Color == PieceColor.White
+                // Determine which way the pawn moves
+                int direction = piece.Color == PieceColor.White
                         ? -1
                         : 1;
 
-                return rowDifference == direction &&
-                       absColumn == 1;
+                return rowDifference == direction && absColumn == 1;
             }
 
             case PieceType.Knight:
             {
-                return
-                    (absRow == 2 && absColumn == 1) ||
-                    (absRow == 1 && absColumn == 2);
+                // The knight moves in an L shape pattern
+                return (absRow == 2 && absColumn == 1) || (absRow == 1 && absColumn == 2);
             }
 
             case PieceType.Bishop:
             {
+                // The bishop moves diagonally
                 if (absRow != absColumn)
                 {
                     return false;
                 }
-
-                return IsPathClear(
-                    fromRow,
-                    fromColumn,
-                    toRow,
-                    toColumn);
+                
+                // Ensure the bishop isn't blocked by another piece
+                return IsPathClear(fromRow, fromColumn, toRow, toColumn);
             }
 
             case PieceType.Rook:
             {
-                if (fromRow != toRow &&
-                    fromColumn != toColumn)
+                // Ensure the rook only moves in straight lines
+                if (fromRow != toRow && fromColumn != toColumn)
                 {
                     return false;
                 }
 
-                return IsPathClear(
-                    fromRow,
-                    fromColumn,
-                    toRow,
-                    toColumn);
+                // Ensure the rook isn't blocked by another piece
+                return IsPathClear(fromRow, fromColumn, toRow, toColumn);
             }
 
             case PieceType.Queen:
             {
-                bool diagonal =
-                    absRow == absColumn;
+                bool diagonal = absRow == absColumn;
 
-                bool straight =
-                    fromRow == toRow ||
-                    fromColumn == toColumn;
+                bool straight = fromRow == toRow || fromColumn == toColumn;
 
+                // Ensure the queen either moved straight or moved diagonally
                 if (!diagonal && !straight)
                 {
                     return false;
                 }
 
-                return IsPathClear(
-                    fromRow,
-                    fromColumn,
-                    toRow,
-                    toColumn);
+                // Ensure the queen isn't blocked by another piece
+                return IsPathClear(fromRow, fromColumn, toRow, toColumn);
             }
 
+            // Ensure the king only moved one square
             case PieceType.King:
             {
-                return absRow <= 1 &&
-                       absColumn <= 1 &&
-                       (absRow != 0 || absColumn != 0);
+                return absRow <= 1 && absColumn <= 1 && (absRow != 0 || absColumn != 0);
             }
 
+            // Return false for all other moves
             default:
                 return false;
         }
     }
 
-    // ============================================================
-    // PATH CHECK
-    // ============================================================
-
-    private bool IsPathClear(
-        int fromRow,
-        int fromColumn,
-        int toRow,
-        int toColumn)
+    // Checks if there are pieces in between the starting and ending squares
+    private bool IsPathClear(int fromRow, int fromColumn, int toRow, int toColumn)
     {
-        int rowDirection =
-            Math.Sign(toRow - fromRow);
+        // Determine the direction the piece must move in
+        int rowDirection = Math.Sign(toRow - fromRow);
+        int columnDirection = Math.Sign(toColumn - fromColumn);
 
-        int columnDirection =
-            Math.Sign(toColumn - fromColumn);
+        // Start checking from the square right after the starting square
+        int row = fromRow + rowDirection;
+        int column = fromColumn + columnDirection;
 
-        int row =
-            fromRow + rowDirection;
-
-        int column =
-            fromColumn + columnDirection;
-
-        while (row != toRow ||
-               column != toColumn)
+        while (row != toRow || column != toColumn)
         {
-            if (squares[row, column].Type != PieceType.None)
+            // If the piece is found, the path is blocked
+            if (_squares[row, column].Type != PieceType.None)
             {
                 return false;
             }
 
+            // Move to the next square along the path
             row += rowDirection;
             column += columnDirection;
         }
-
         return true;
     }
 
-    // ============================================================
-    // STARTING POSITION
-    // ============================================================
-
+    // Set up the chessboards starting position
     private void SetupStartingPosition()
     {
         // Black pieces
-        squares[0, 0] =
-            new PieceData(PieceType.Rook, PieceColor.Black);
+        _squares[0, 0] = new PieceData(PieceType.Rook, PieceColor.Black);
 
-        squares[0, 1] =
-            new PieceData(PieceType.Knight, PieceColor.Black);
+        _squares[0, 1] = new PieceData(PieceType.Knight, PieceColor.Black);
 
-        squares[0, 2] =
-            new PieceData(PieceType.Bishop, PieceColor.Black);
+        _squares[0, 2] = new PieceData(PieceType.Bishop, PieceColor.Black);
 
-        squares[0, 3] =
-            new PieceData(PieceType.Queen, PieceColor.Black);
+        _squares[0, 3] = new PieceData(PieceType.Queen, PieceColor.Black);
 
-        squares[0, 4] =
-            new PieceData(PieceType.King, PieceColor.Black);
+        _squares[0, 4] = new PieceData(PieceType.King, PieceColor.Black);
 
-        squares[0, 5] =
-            new PieceData(PieceType.Bishop, PieceColor.Black);
+        _squares[0, 5] = new PieceData(PieceType.Bishop, PieceColor.Black);
 
-        squares[0, 6] =
-            new PieceData(PieceType.Knight, PieceColor.Black);
+        _squares[0, 6] = new PieceData(PieceType.Knight, PieceColor.Black);
 
-        squares[0, 7] =
-            new PieceData(PieceType.Rook, PieceColor.Black);
+        _squares[0, 7] = new PieceData(PieceType.Rook, PieceColor.Black);
 
         // Black pawns
         for (int column = 0; column < 8; column++)
         {
-            squares[1, column] =
-                new PieceData(
-                    PieceType.Pawn,
-                    PieceColor.Black);
+            _squares[1, column] = new PieceData(PieceType.Pawn, PieceColor.Black);
         }
 
         // White pieces
-        squares[7, 0] =
-            new PieceData(PieceType.Rook, PieceColor.White);
+        _squares[7, 0] = new PieceData(PieceType.Rook, PieceColor.White);
 
-        squares[7, 1] =
-            new PieceData(PieceType.Knight, PieceColor.White);
+        _squares[7, 1] = new PieceData(PieceType.Knight, PieceColor.White);
 
-        squares[7, 2] =
-            new PieceData(PieceType.Bishop, PieceColor.White);
+        _squares[7, 2] = new PieceData(PieceType.Bishop, PieceColor.White);
 
-        squares[7, 3] =
-            new PieceData(PieceType.Queen, PieceColor.White);
+        _squares[7, 3] = new PieceData(PieceType.Queen, PieceColor.White);
 
-        squares[7, 4] =
-            new PieceData(PieceType.King, PieceColor.White);
+        _squares[7, 4] = new PieceData(PieceType.King, PieceColor.White);
 
-        squares[7, 5] =
-            new PieceData(PieceType.Bishop, PieceColor.White);
+        _squares[7, 5] = new PieceData(PieceType.Bishop, PieceColor.White);
 
-        squares[7, 6] =
-            new PieceData(PieceType.Knight, PieceColor.White);
+        _squares[7, 6] = new PieceData(PieceType.Knight, PieceColor.White);
 
-        squares[7, 7] =
-            new PieceData(PieceType.Rook, PieceColor.White);
+        _squares[7, 7] = new PieceData(PieceType.Rook, PieceColor.White);
 
         // White pawns
         for (int column = 0; column < 8; column++)
         {
-            squares[6, column] =
-                new PieceData(
-                    PieceType.Pawn,
-                    PieceColor.White);
+            _squares[6, column] = new PieceData(PieceType.Pawn, PieceColor.White);
         }
     }
 }

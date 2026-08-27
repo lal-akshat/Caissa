@@ -29,8 +29,10 @@ public class Bishop : Piece
             return false;
         }
 
-        if (yMove > YPos && xMove > XPos && yMove - YPos == xMove - XPos) //Checks up diagonally right
+        // Checks the square diagonally right upwards
+        if (yMove > YPos && xMove > XPos && yMove - YPos == xMove - XPos)
         {
+            // Checks if there is a piece blocking path
             for (var i = yMove - YPos; i > 1; i--)
             {
                 var newTarget = CheckOccupied(XPos + i - 1, YPos + i - 1, board);
@@ -41,8 +43,10 @@ public class Bishop : Piece
             }
         }
 
-        else if (yMove < YPos && xMove > XPos && YPos - yMove == xMove - XPos) //Checks up diagonally left
+        // Checks the square diagonally left upwards
+        else if (yMove < YPos && xMove > XPos && YPos - yMove == xMove - XPos) 
         {
+            // Checks if there is a piece blocking path
             for (var i = YPos - yMove; i > 1; i--)
             {
                 var newTarget = CheckOccupied(XPos + i - 1, YPos - i + 1, board);
@@ -53,8 +57,10 @@ public class Bishop : Piece
             }
         }
 
-        else if (yMove > YPos && xMove < XPos && yMove - YPos == XPos - xMove) //Checks down diagonally right
+        // Checks the square diagonally right downwards
+        else if (yMove > YPos && xMove < XPos && yMove - YPos == XPos - xMove)
         {
+            // Checks if there is a piece blocking path
             for (var i = yMove - YPos; i > 1; i--)
             {
                 var newTarget = CheckOccupied(XPos - i + 1, YPos + i - 1, board);
@@ -65,8 +71,10 @@ public class Bishop : Piece
             }
         }
 
-        else if (yMove < YPos && xMove < XPos && YPos - yMove == XPos - xMove) //Checks down diagonally left
+        // Checks the square diagonally left downwards
+        else if (yMove < YPos && xMove < XPos && YPos - yMove == XPos - xMove)
         {
+            // Checks if there is a piece blocking path
             for (var i = YPos - yMove; i > 1; i--)
             {
                 var newTarget = CheckOccupied(XPos - i + 1, YPos - i + 1, board);

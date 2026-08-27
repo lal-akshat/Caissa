@@ -35,6 +35,7 @@ public class Rook : Piece
             return false;
         }
         
+        // Checks if the piece is 
         if (yMove > YPos && xMove == XPos)
         {
             for (var i = yMove - YPos; i > 1; i--)

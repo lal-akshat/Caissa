@@ -1,7 +1,10 @@
 ﻿namespace Caissa.Chess_Engine;
 
-public class Evaluation
+public static class Evaluation
 {
+    /**
+     * Method to evaluate a score for the current board
+     */
     public static int Evaluate(Board board)
     {
         int score = 0;
@@ -12,6 +15,7 @@ public class Evaluation
             {
                 PieceData piece = board.GetPiece(row, column);
 
+                // Skip empty squares
                 if (piece.Type == PieceType.None)
                 {
                     continue;
