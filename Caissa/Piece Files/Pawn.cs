@@ -6,17 +6,17 @@ public class Pawn : Piece
     {
     }
 
-    public override void move(int xMove, int yMove)
+    public override void Move(int xMove, int yMove)
     {
-        xPos = xMove;
-        yPos = yMove;
+        XPos = xMove;
+        YPos = yMove;
     }
 
-    public override bool isLegal(int xMove, int yMove, string[,] board)
+    public override bool IsLegal(int xMove, int yMove, string[,] board)
     {
         // Allows us to differ the movement between white and black pawns
         int direction;
-        if (isWhite)
+        if (IsWhite)
         {
             direction = -1;
         }
@@ -32,16 +32,16 @@ public class Pawn : Piece
         }
 
         // Holds whatever value is at the targetted square (w, b, n)
-        var target = checkOccupied(xMove, yMove, board);
+        var target = CheckOccupied(xMove, yMove, board);
 
         // Cannot capture own piece
-        if ((isWhite && target == 'w') || (!isWhite && target == 'b'))
+        if ((IsWhite && target == 'w') || (!IsWhite && target == 'b'))
         {
             return false;
         }
 
         // Check if the pawn can move forward 1
-        if (yMove == yPos && xMove == xPos + direction)
+        if (yMove == YPos && xMove == XPos + direction)
         {
             // If the targetted square is empty
             if (target == 'n')
@@ -51,13 +51,13 @@ public class Pawn : Piece
         }
 
         // Check if the pawn can move forward 2
-        if (yMove == yPos && xMove == xPos + 2 * direction)
+        if (yMove == YPos && xMove == XPos + 2 * direction)
         {
             // If the pawn is on its starting square
-            if ((isWhite && xPos == 6) || (!isWhite && xPos == 1))
+            if ((IsWhite && XPos == 6) || (!IsWhite && XPos == 1))
             {
                 // If the targetted and in between squares are empty
-                if (board[xPos + direction, yPos] == "." && target == 'n')
+                if (board[XPos + direction, YPos] == "." && target == 'n')
                 {
                     return true;
                 }
@@ -65,7 +65,7 @@ public class Pawn : Piece
         }
 
         // Check if the pawn can move diagonally to capture a piece
-        if ((yMove == yPos + 1 || yMove == yPos - 1) && xMove == xPos + direction)
+        if ((yMove == YPos + 1 || yMove == YPos - 1) && xMove == XPos + direction)
         {
             if (target != 'n')
             {

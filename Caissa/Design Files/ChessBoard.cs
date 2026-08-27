@@ -887,12 +887,12 @@ public partial class ChessBoard : Form
 
             bool basic = type switch
             {
-                'p' => new Pawn(r, c, isWhite).isLegal(i, j, Board),
-                'r' => new Rook(r, c, isWhite).isLegal(i, j, Board),
-                'n' => new Knight(r, c, isWhite).isLegal(i, j, Board),
-                'b' => new Bishop(r, c, isWhite).isLegal(i, j, Board),
-                'q' => new Queen(r, c, isWhite).isLegal(i, j, Board),
-                'k' => new King(r, c, isWhite).isLegal(i, j, Board),
+                'p' => new Pawn(r, c, isWhite).IsLegal(i, j, Board),
+                'r' => new Rook(r, c, isWhite).IsLegal(i, j, Board),
+                'n' => new Knight(r, c, isWhite).IsLegal(i, j, Board),
+                'b' => new Bishop(r, c, isWhite).IsLegal(i, j, Board),
+                'q' => new Queen(r, c, isWhite).IsLegal(i, j, Board),
+                'k' => new King(r, c, isWhite).IsLegal(i, j, Board),
                 _ => false
             };
             if (basic && WouldBeSafeMove(r, c, i, j, isWhite))
@@ -936,12 +936,12 @@ public partial class ChessBoard : Form
             char type = char.ToLower(Board[r, c][0]);
             bool attack = type switch
             {
-                'p' => new Pawn(r, c, !isWhite).isLegal(kr, kc, Board),
-                'r' => new Rook(r, c, !isWhite).isLegal(kr, kc, Board),
-                'n' => new Knight(r, c, !isWhite).isLegal(kr, kc, Board),
-                'b' => new Bishop(r, c, !isWhite).isLegal(kr, kc, Board),
-                'q' => new Queen(r, c, !isWhite).isLegal(kr, kc, Board),
-                'k' => new King(r, c, !isWhite).isLegal(kr, kc, Board),
+                'p' => new Pawn(r, c, !isWhite).IsLegal(kr, kc, Board),
+                'r' => new Rook(r, c, !isWhite).IsLegal(kr, kc, Board),
+                'n' => new Knight(r, c, !isWhite).IsLegal(kr, kc, Board),
+                'b' => new Bishop(r, c, !isWhite).IsLegal(kr, kc, Board),
+                'q' => new Queen(r, c, !isWhite).IsLegal(kr, kc, Board),
+                'k' => new King(r, c, !isWhite).IsLegal(kr, kc, Board),
                 _ => false
             };
             if (attack) return true;

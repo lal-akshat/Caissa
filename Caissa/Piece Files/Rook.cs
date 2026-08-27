@@ -6,13 +6,13 @@ public class Rook : Piece
     {
     }
 
-    public override void move(int xMove, int yMove)
+    public override void Move(int xMove, int yMove)
     {
-        xPos = xMove;
-        yPos = yMove;
+        XPos = xMove;
+        YPos = yMove;
     }
 
-    public override bool isLegal(int xMove, int yMove, string[,] board)
+    public override bool IsLegal(int xMove, int yMove, string[,] board)
     {
         // If the new position is out of bounds, return false
         if (xMove < 0 || xMove > 7 || yMove < 0 || yMove > 7)
@@ -21,25 +21,25 @@ public class Rook : Piece
         }
 
         // Holds whatever value is at the targetted square (w, b, n)
-        var target = checkOccupied(xMove, yMove, board);
+        var target = CheckOccupied(xMove, yMove, board);
 
         // Cannot capture own piece
-        if ((isWhite && target == 'w') || (!isWhite && target == 'b'))
+        if ((IsWhite && target == 'w') || (!IsWhite && target == 'b'))
         {
             return false;
         }
 
         // If it moves horizontally and vertically in the same move, return false
-        if (yMove != yPos && xMove != xPos)
+        if (yMove != YPos && xMove != XPos)
         {
             return false;
         }
         
-        if (yMove > yPos && xMove == xPos)
+        if (yMove > YPos && xMove == XPos)
         {
-            for (var i = yMove - yPos; i > 1; i--)
+            for (var i = yMove - YPos; i > 1; i--)
             {
-                var newTarget = checkOccupied(xPos, yPos + i - 1, board);
+                var newTarget = CheckOccupied(XPos, YPos + i - 1, board);
                 if (newTarget != 'n')
                 {
                     return false;
@@ -47,11 +47,11 @@ public class Rook : Piece
             }
         }
 
-        else if (yMove < yPos && xMove == xPos)
+        else if (yMove < YPos && xMove == XPos)
         {
-            for (var i = yPos - yMove; i > 1; i--)
+            for (var i = YPos - yMove; i > 1; i--)
             {
-                var newTarget = checkOccupied(xPos, yPos - i + 1, board);
+                var newTarget = CheckOccupied(XPos, YPos - i + 1, board);
                 if (newTarget != 'n')
                 {
                     return false;
@@ -59,11 +59,11 @@ public class Rook : Piece
             }
         }
 
-        else if (yMove == yPos && xMove > xPos)
+        else if (yMove == YPos && xMove > XPos)
         {
-            for (var i = xMove - xPos; i > 1; i--)
+            for (var i = xMove - XPos; i > 1; i--)
             {
-                var newTarget = checkOccupied(xPos + i - 1, yPos, board);
+                var newTarget = CheckOccupied(XPos + i - 1, YPos, board);
                 if (newTarget != 'n')
                 {
                     return false;
@@ -71,11 +71,11 @@ public class Rook : Piece
             }
         }
 
-        else if (yMove == yPos && xMove < xPos)
+        else if (yMove == YPos && xMove < XPos)
         {
-            for (var i = xPos - xMove; i > 1; i--)
+            for (var i = XPos - xMove; i > 1; i--)
             {
-                var newTarget = checkOccupied(xPos - i + 1, yPos, board);
+                var newTarget = CheckOccupied(XPos - i + 1, YPos, board);
                 if (newTarget != 'n')
                 {
                     return false;
@@ -83,7 +83,7 @@ public class Rook : Piece
             }
         }
         
-        if ((isWhite && target == 'b') || (!isWhite && target == 'w') || target == 'n')
+        if ((IsWhite && target == 'b') || (!IsWhite && target == 'w') || target == 'n')
         {
             return true;
         }
