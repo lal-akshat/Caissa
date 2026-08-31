@@ -1,4 +1,4 @@
-﻿namespace Caissa;
+﻿namespace Caissa.Piece_Files;
 
 public class Pawn : Piece
 {
@@ -31,7 +31,7 @@ public class Pawn : Piece
             return false;
         }
 
-        // Holds whatever value is at the targetted square (w, b, n)
+        // Holds whatever value is at the targeted square (w, b, n)
         var target = CheckOccupied(xMove, yMove, board);
 
         // Cannot capture own piece
@@ -43,7 +43,7 @@ public class Pawn : Piece
         // Check if the pawn can move forward 1
         if (yMove == YPos && xMove == XPos + direction)
         {
-            // If the targetted square is empty
+            // If the targeted square is empty
             if (target == 'n')
             {
                 return true;
@@ -56,7 +56,7 @@ public class Pawn : Piece
             // If the pawn is on its starting square
             if ((IsWhite && XPos == 6) || (!IsWhite && XPos == 1))
             {
-                // If the targetted and in between squares are empty
+                // If the targeted and in between squares are empty
                 if (board[XPos + direction, YPos] == "." && target == 'n')
                 {
                     return true;

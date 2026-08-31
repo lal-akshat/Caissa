@@ -1,4 +1,4 @@
-﻿namespace Caissa;
+﻿namespace Caissa.Piece_Files;
 
 public class Rook : Piece
 {
@@ -20,7 +20,7 @@ public class Rook : Piece
             return false;
         }
 
-        // Holds whatever value is at the targetted square (w, b, n)
+        // Holds whatever value is at the targeted square (w, b, n)
         var target = CheckOccupied(xMove, yMove, board);
 
         // Cannot capture own piece
@@ -34,10 +34,11 @@ public class Rook : Piece
         {
             return false;
         }
-        
-        // Checks if the piece is 
+
+        // Checks if the piece is moving upwards
         if (yMove > YPos && xMove == XPos)
         {
+            // Checks if there is a piece blocking path
             for (var i = yMove - YPos; i > 1; i--)
             {
                 var newTarget = CheckOccupied(XPos, YPos + i - 1, board);
@@ -48,8 +49,10 @@ public class Rook : Piece
             }
         }
 
+        // Checks if the piece is moving downwards
         else if (yMove < YPos && xMove == XPos)
         {
+            // Checks if there is a piece blocking path
             for (var i = YPos - yMove; i > 1; i--)
             {
                 var newTarget = CheckOccupied(XPos, YPos - i + 1, board);
@@ -60,8 +63,10 @@ public class Rook : Piece
             }
         }
 
+        // Checks if the piece is moving right
         else if (yMove == YPos && xMove > XPos)
         {
+            // Checks if there is a piece blocking path
             for (var i = xMove - XPos; i > 1; i--)
             {
                 var newTarget = CheckOccupied(XPos + i - 1, YPos, board);
@@ -72,8 +77,10 @@ public class Rook : Piece
             }
         }
 
+        // Checks if the piece is moving left
         else if (yMove == YPos && xMove < XPos)
         {
+            // Checks if there is a piece blocking path
             for (var i = XPos - xMove; i > 1; i--)
             {
                 var newTarget = CheckOccupied(XPos - i + 1, YPos, board);
@@ -83,7 +90,7 @@ public class Rook : Piece
                 }
             }
         }
-        
+
         if ((IsWhite && target == 'b') || (!IsWhite && target == 'w') || target == 'n')
         {
             return true;

@@ -1,4 +1,4 @@
-﻿namespace Caissa;
+﻿namespace Caissa.Piece_Files;
 
 public class Knight : Piece
 {

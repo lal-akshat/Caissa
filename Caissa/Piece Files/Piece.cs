@@ -1,10 +1,10 @@
-﻿namespace Caissa;
+﻿namespace Caissa.Piece_Files;
 
 public abstract class Piece
 {
     // Each piece has a coordinate position, and is either white or black
-    protected bool IsWhite;
-    public int XPos, YPos;
+    protected readonly bool IsWhite;
+    protected int XPos, YPos;
 
     // Constructor for the Piece class
     protected Piece(int xPos, int yPos, bool isWhite)
@@ -21,7 +21,7 @@ public abstract class Piece
     public abstract bool IsLegal(int xMove, int yMove, string[,] board);
 
     // checkOccupied method checks if the selected square is occupied
-    public char CheckOccupied(int xMove, int yMove, string[,] board)
+    protected char CheckOccupied(int xMove, int yMove, string[,] board)
     {
         // If the selected spot is empty, return 'n' to signal clear
         if (board[xMove, yMove] == ".")

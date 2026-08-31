@@ -1,4 +1,4 @@
-﻿namespace Caissa;
+﻿namespace Caissa.Piece_Files;
 
 public class King : Piece
 {
@@ -20,7 +20,7 @@ public class King : Piece
             return false;
         }
 
-        // Holds whatever value is at the targetted square (w, b, n)
+        // Holds whatever value is at the targeted square (w, b, n)
         var target = CheckOccupied(xMove, yMove, board);
 
         // Cannot capture own piece
