@@ -1,4 +1,4 @@
-﻿namespace Caissa.Chess_Engine;
+﻿namespace Caissa.Chess_Rules;
 
 // Stores information about a single chess move
 public class Move

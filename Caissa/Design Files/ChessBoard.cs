@@ -1,5 +1,6 @@
 ﻿using System.Drawing.Drawing2D;
 using Caissa.Chess_Engine;
+using Caissa.Chess_Rules;
 
 namespace Caissa;
 
@@ -592,9 +593,9 @@ public partial class ChessBoard : Form
             bestMove.ToColumn);
     }
     
-    private Chess_Engine.Board ConvertToEngineBoard()
+    private Board ConvertToEngineBoard()
     {
-        var engineBoard = new Chess_Engine.Board();
+        var engineBoard = new Board();
 
         for (int row = 0; row < 8; row++)
         {
@@ -962,7 +963,7 @@ public partial class ChessBoard : Form
     // ═══════════════════════════════════════════════════════════════════════
     // Board Renderer
     // ═══════════════════════════════════════════════════════════════════════
-    public class BoardPanel : Panel
+    public sealed class BoardPanel : Panel
     {
         readonly ChessBoard _g;
 

@@ -1,4 +1,4 @@
-﻿namespace Caissa;
+﻿namespace Caissa.Chess_Rules;
 
 // An enum to contain the possible pieces on a square
 public enum PieceType

@@ -1,12 +1,14 @@
-﻿namespace Caissa.Chess_Engine;
+﻿using Caissa.Chess_Rules;
+
+namespace Caissa.Chess_Engine;
 
 public class Engine
 {
-    private readonly Search search;
+    private readonly Search _search;
 
     public Engine()
     {
-        search = new Search();
+        _search = new Search();
     }
 
     public Move? FindBestMove(
@@ -14,6 +16,6 @@ public class Engine
         PieceColor color,
         int depth)
     {
-        return search.FindBestMove(board, color, depth);
+        return _search.FindBestMove(board, color, depth);
     }
 }

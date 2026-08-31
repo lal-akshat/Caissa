@@ -1,4 +1,6 @@
-﻿namespace Caissa.Chess_Engine;
+﻿using Caissa.Chess_Rules;
+
+namespace Caissa.Chess_Engine;
 
 public class PossibleMoves
 {

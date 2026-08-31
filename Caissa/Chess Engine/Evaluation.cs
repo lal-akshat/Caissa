@@ -1,4 +1,6 @@
-﻿namespace Caissa.Chess_Engine;
+﻿using Caissa.Chess_Rules;
+
+namespace Caissa.Chess_Engine;
 
 public static class Evaluation
 {
@@ -56,8 +58,6 @@ public static class Evaluation
             
             PieceType.King => 20000,
             
-            PieceType.None => 0,
-            
             _ => 0
         };
     }
@@ -93,8 +93,6 @@ public static class Evaluation
 
             PieceType.King => KingTable[tableRow, column],
             
-            PieceType.None => 0,
-
             _ => 0
         };
     }
